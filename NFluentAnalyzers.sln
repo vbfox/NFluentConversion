@@ -9,6 +9,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NFluentAnalyzers.Test", "NF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NFluentAnalyzers.Vsix", "NFluentAnalyzers\NFluentAnalyzers.Vsix\NFluentAnalyzers.Vsix.csproj", "{64305CF5-7CAE-4EB4-B271-CCDCB3F4FC58}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{373449B4-D462-4AA5-84AA-A750720065CA}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
