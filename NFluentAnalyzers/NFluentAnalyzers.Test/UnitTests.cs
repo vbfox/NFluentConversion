@@ -71,12 +71,12 @@ namespace NFluentAnalyzers.Test
 
         protected override CodeFixProvider GetCSharpCodeFixProvider()
         {
-            return new NFluentAnalyzersCodeFixProvider();
+            return new ReplaceNUnitCodeFix();
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
         {
-            return new NFluentAnalyzersAnalyzer();
+            return new ReplaceNUnitAnalyzer();
         }
     }
 }

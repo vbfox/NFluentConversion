@@ -6,13 +6,13 @@ namespace NFluentAnalyzers
 	static class KnownTypes
 	{
 		[CanBeNull]
-		public static INamedTypeSymbol GetNFluentCheck([NotNull] Compilation compilation)
+		public static INamedTypeSymbol NFluentCheckType([NotNull] this Compilation compilation)
 		{
 			return compilation.GetTypeByMetadataName("NFluent.Check");
 		}
 
 		[CanBeNull]
-		public static INamedTypeSymbol GetNUnitAssert([NotNull] Compilation compilation)
+		public static INamedTypeSymbol NUnitAssertType([NotNull] this Compilation compilation)
 		{
 			return compilation.GetTypeByMetadataName("NUnit.Framework.Assert");
 		}

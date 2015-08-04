@@ -32,11 +32,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CodeFixProvider.cs" />
-    <Compile Include="DiagnosticAnalyzer.cs" />
+    <Compile Include="ReplaceNUnitCodeFix.cs" />
+    <Compile Include="ReplaceNUnitAnalyzer.cs" />
+    <Compile Include="RoslynExtensions\InvocationExpressionSyntaxExtensions.cs" />
     <Compile Include="KnownTypes.cs" />
+    <Compile Include="RoslynExtensions\NamedTypeSymbolExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResharperAnnotations.cs" />
+    <Compile Include="RoslynExtensions\SemanticModelExtensions.cs" />
+    <Compile Include="RoslynExtensions\SyntaxNodeExtensions.cs" />
+    <Compile Include="RoslynHelpers\UsingHelpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Diagnostic.nuspec">
