@@ -1,30 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Diagnostics;
-
 namespace NFluentAnalyzers
 {
-    [DiagnosticAnalyzer(LanguageNames.CSharp)]
+	using System.Collections.Immutable;
+	using Microsoft.CodeAnalysis;
+	using Microsoft.CodeAnalysis.CSharp;
+	using Microsoft.CodeAnalysis.CSharp.Syntax;
+	using Microsoft.CodeAnalysis.Diagnostics;
+
+	[DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class NFluentAnalyzersAnalyzer : DiagnosticAnalyzer
     {
-        public const string DiagnosticId = "NFluentAnalyzers";
+        public const string DIAGNOSTIC_ID = "NFluentAnalyzers";
 
-        // You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
-        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.AnalyzerTitle), Resources.ResourceManager, typeof(Resources));
-        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.AnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
-        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.AnalyzerDescription), Resources.ResourceManager, typeof(Resources));
-        private const string Category = "Naming";
+        private static readonly DiagnosticDescriptor descriptor = new DiagnosticDescriptor(
+			DIAGNOSTIC_ID,
+			"Replace with NFluent",
+			"Replace {0} with NFluent",
+			"Naming",
+			DiagnosticSeverity.Info,
+			isEnabledByDefault: true,
+			description: "Replace NUnit Assert with the equivalent one in NFluent");
 
-        private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
-
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(descriptor); } }
 
         public override void Initialize(AnalysisContext context)
         {
@@ -56,13 +52,13 @@ namespace NFluentAnalyzers
                 return;
             }
 
-            var nfluentCheck = context.SemanticModel.Compilation.GetTypeByMetadataName("NFluent.Check");
+            var nfluentCheck = KnownTypes.GetNFluentCheck(context.SemanticModel.Compilation);
             if (nfluentCheck == null)
             {
                 return;
             }
 
-            var nunitAssert = context.SemanticModel.Compilation.GetTypeByMetadataName("NUnit.Framework.Assert");
+            var nunitAssert = KnownTypes.GetNUnitAssert(context.SemanticModel.Compilation);
             if (nunitAssert == null)
             {
                 return;
@@ -73,7 +69,7 @@ namespace NFluentAnalyzers
                 return;
             }
 
-            var diagnostic = Diagnostic.Create(Rule, memberAccess.GetLocation(), symbol.Name);
+            var diagnostic = Diagnostic.Create(descriptor, memberAccess.GetLocation(), symbol.Name);
 
             context.ReportDiagnostic(diagnostic);
         }

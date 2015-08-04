@@ -22,7 +22,7 @@ namespace NFluentAnalyzers
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
-            get { return ImmutableArray.Create(NFluentAnalyzersAnalyzer.DiagnosticId); }
+            get { return ImmutableArray.Create(NFluentAnalyzersAnalyzer.DIAGNOSTIC_ID); }
         }
 
         public sealed override FixAllProvider GetFixAllProvider()
