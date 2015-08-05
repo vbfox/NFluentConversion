@@ -32,6 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="RoslynHelpers\CSharpTypeNaming.cs" />
+    <Compile Include="NUnitAssertMethods.cs" />
     <Compile Include="ReplaceNUnitCodeFix.cs" />
     <Compile Include="ReplaceNUnitAnalyzer.cs" />
     <Compile Include="RoslynExtensions\InvocationExpressionSyntaxExtensions.cs" />
@@ -41,7 +43,10 @@
     <Compile Include="ResharperAnnotations.cs" />
     <Compile Include="RoslynExtensions\SemanticModelExtensions.cs" />
     <Compile Include="RoslynExtensions\SyntaxNodeExtensions.cs" />
+    <Compile Include="RoslynHelpers\SearchTypeInfo.cs" />
     <Compile Include="RoslynHelpers\UsingHelpers.cs" />
+    <Compile Include="RoslynHelpers\SearchMethodInfo.cs" />
+    <Compile Include="Helpers\EmptyArray.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Diagnostic.nuspec">

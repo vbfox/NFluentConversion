@@ -1,77 +1,96 @@
 namespace NFluentAnalyzers
 {
-	using System.Collections.Immutable;
-	using Microsoft.CodeAnalysis;
-	using Microsoft.CodeAnalysis.CSharp;
-	using Microsoft.CodeAnalysis.CSharp.Syntax;
-	using Microsoft.CodeAnalysis.Diagnostics;
+    using System.Collections.Immutable;
+    using System.Linq;
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using Microsoft.CodeAnalysis.Diagnostics;
+    using NFluentAnalyzers.Helpers;
 
-	[DiagnosticAnalyzer(LanguageNames.CSharp)]
+    [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ReplaceNUnitAnalyzer : DiagnosticAnalyzer
     {
-        public const string DIAGNOSTIC_ID = "ReplaceNUnitAnalyzer";
+        public const string DiagnosticId = "ReplaceNUnitAnalyzer";
 
         private static readonly DiagnosticDescriptor descriptor = new DiagnosticDescriptor(
-			DIAGNOSTIC_ID,
+			DiagnosticId,
 			"Replace with NFluent",
 			"Replace {0} with NFluent",
 			"Naming",
 			DiagnosticSeverity.Info,
 			isEnabledByDefault: true,
-			description: "Replace NUnit Assert with the equivalent one in NFluent");
+            customTags: EmptyArray.Of<string>(),
+            description: "Replace NUnit Assert with the equivalent one in NFluent");
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(descriptor); } }
+        static readonly ImmutableArray<DiagnosticDescriptor> supportedDiagnostics = ImmutableArray.Create(descriptor);
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => supportedDiagnostics;
 
         public override void Initialize(AnalysisContext context)
         {
-            context.RegisterSyntaxNodeAction(AnalyzeInvocation, SyntaxKind.SimpleMemberAccessExpression);
+            context.RegisterSyntaxNodeAction(AnalyzeInvocation, SyntaxKind.InvocationExpression);
         }
-
-        private static readonly ImmutableHashSet<string> assertMethods = new[] { "AreEqual", "AreNotEqual" }.ToImmutableHashSet();
 
         private static void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
         {
-            var memberAccess = (MemberAccessExpressionSyntax)context.Node;
+            var invocation = (InvocationExpressionSyntax)context.Node;
+            if (!(invocation.Expression is MemberAccessExpressionSyntax))
+            {
+                return;
+            }
 
-	        if (!(memberAccess.Parent is InvocationExpressionSyntax)
-				|| !assertMethods.Contains(memberAccess.Name.Identifier.Text))
-	        {
-				return;
-	        }
+            var memberAccess = (MemberAccessExpressionSyntax)invocation.Expression;
+            if (!CouldBeAnAssert(memberAccess))
+            {
+                return;
+            }
 
             var symbol = context.SemanticModel.GetSymbolInfo(memberAccess).Symbol as IMethodSymbol;
-            if (symbol == null)
-            {
-                return;
-            }
+            AnalyzeInvocation(context, symbol, invocation);
+        }
 
-            if (symbol.ContainingType.Name != "Assert"
-                || !assertMethods.Contains(symbol.Name)
-                || symbol.MethodKind != MethodKind.Ordinary
-                || !symbol.IsStatic)
-            {
-                return;
-            }
+        static void AnalyzeInvocation(SyntaxNodeAnalysisContext context, IMethodSymbol symbol,
+            InvocationExpressionSyntax invocation)
+        {
+            if (symbol?.MethodKind != MethodKind.Ordinary
+                || !symbol.IsStatic
+                || !NUnitAssertMethods.Type.Equals(symbol.ContainingType)) return;
 
-            var nfluentCheck = context.SemanticModel.Compilation.NFluentCheckType();
-            if (nfluentCheck == null)
-            {
-                return;
-            }
+            if (context.SemanticModel.Compilation.NFluentCheckType() == null) return;
 
             var nunitAssert = context.SemanticModel.Compilation.NUnitAssertType();
-            if (nunitAssert == null)
-            {
-                return;
-            }
+            if (nunitAssert == null) return;
 
-            if (!symbol.ContainingType.Equals(nunitAssert) || symbol.Parameters.Length != 2)
-            {
-                return;
-            }
+            if (!symbol.ContainingType.Equals(nunitAssert)) return;
 
-            var diagnostic = Diagnostic.Create(descriptor, memberAccess.Parent.GetLocation(), symbol.Name);
+            if (!IsAnAssert(symbol)) return;
+
+            var diagnostic = Diagnostic.Create(descriptor, invocation.GetLocation(), symbol.Name);
             context.ReportDiagnostic(diagnostic);
+        }
+
+        static bool IsAnAssert(IMethodSymbol symbol)
+        {
+            for (var i = 0; i < NUnitAssertMethods.All.Count; i++)
+            {
+                if (NUnitAssertMethods.All[i].Equals(symbol, false))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        static bool CouldBeAnAssert(MemberAccessExpressionSyntax memberAccess)
+        {
+            for (var i = 0; i < NUnitAssertMethods.All.Count; i++)
+            {
+                if (NUnitAssertMethods.All[i].CouldBeEqualto(memberAccess))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

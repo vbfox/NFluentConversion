@@ -20,7 +20,7 @@
 		public const string EQUIVALENCE_KEY = "ReplaceNUnitCodeFix";
 
 		private static readonly ImmutableArray<string> fixableDiagnosticIds
-			= ImmutableArray.Create(ReplaceNUnitAnalyzer.DIAGNOSTIC_ID);
+			= ImmutableArray.Create(ReplaceNUnitAnalyzer.DiagnosticId);
 
 		public override sealed ImmutableArray<string> FixableDiagnosticIds => fixableDiagnosticIds;
 
