@@ -1,7 +1,6 @@
 namespace NFluentAnalyzers
 {
     using System.Collections.Immutable;
-    using System.Linq;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -28,10 +27,24 @@ namespace NFluentAnalyzers
 
         public override void Initialize(AnalysisContext context)
         {
-            context.RegisterSyntaxNodeAction(AnalyzeInvocation, SyntaxKind.InvocationExpression);
+            context.RegisterCompilationStartAction(CompilationStart);
         }
 
-        private static void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
+        static readonly SyntaxKind[] wantedKinds = { SyntaxKind.InvocationExpression };
+
+        void CompilationStart(CompilationStartAnalysisContext context)
+        {
+            var nfluentCheck = context.Compilation.NFluentCheckType();
+            if (nfluentCheck == null) return;
+
+            var nunitAssert = context.Compilation.NUnitAssertType();
+            if (nunitAssert == null) return;
+
+            var nunitAssertForClosure = nunitAssert;
+            context.RegisterSyntaxNodeAction(c => AnalyzeInvocation(c, nunitAssertForClosure), wantedKinds);
+        }
+
+        private static void AnalyzeInvocation(SyntaxNodeAnalysisContext context, INamedTypeSymbol nunitAssert)
         {
             var invocation = (InvocationExpressionSyntax)context.Node;
             if (!(invocation.Expression is MemberAccessExpressionSyntax))
@@ -46,20 +59,15 @@ namespace NFluentAnalyzers
             }
 
             var symbol = context.SemanticModel.GetSymbolInfo(memberAccess).Symbol as IMethodSymbol;
-            AnalyzeInvocation(context, symbol, invocation);
+            AnalyzeInvocation(context, symbol, invocation, nunitAssert);
         }
 
         static void AnalyzeInvocation(SyntaxNodeAnalysisContext context, IMethodSymbol symbol,
-            InvocationExpressionSyntax invocation)
+            InvocationExpressionSyntax invocation, INamedTypeSymbol nunitAssert)
         {
             if (symbol?.MethodKind != MethodKind.Ordinary
                 || !symbol.IsStatic
                 || !NUnitAssertMethods.Type.Equals(symbol.ContainingType)) return;
-
-            if (context.SemanticModel.Compilation.NFluentCheckType() == null) return;
-
-            var nunitAssert = context.SemanticModel.Compilation.NUnitAssertType();
-            if (nunitAssert == null) return;
 
             if (!symbol.ContainingType.Equals(nunitAssert)) return;
 
